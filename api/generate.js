@@ -60,11 +60,20 @@ export default async function handler(req, res) {
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Use Gemini 1.5 Pro which has better multimodal capabilities
-    // Note: Gemini models generate text descriptions, not actual images
-    // For true image generation, you'd need Imagen API
+    // Try the most common available model names in order
+    // gemini-pro is the most widely available model
+    let modelName = "gemini-pro";
+    
+    // Try these models in order of likelihood:
+    const modelsToTry = [
+      "gemini-pro",
+      "gemini-1.5-flash", 
+      "gemini-1.0-pro",
+      "models/gemini-pro"
+    ];
+    
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-pro",
+      model: modelName,
       generationConfig: {
         temperature: 1,
         topK: 40,
