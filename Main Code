@@ -127,7 +127,7 @@
 
         // --- CONFIGURATION ---
         // API key is loaded from secrets/config.js
-        const API_KEY = window.CONFIG?.GOOGLE_API_KEY || ""; 
+        const API_KEY = window.CONFIG?.GeminiAPIKey || ""; 
         
         // Background Prompts
         const BACKGROUNDS = {
