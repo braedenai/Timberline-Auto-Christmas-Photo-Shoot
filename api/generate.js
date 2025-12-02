@@ -59,7 +59,18 @@ export default async function handler(req, res) {
 
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    
+    // Try multiple models in case one isn't available
+    // gemini-1.5-flash is more stable and widely available
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        temperature: 0.9,
+        topK: 32,
+        topP: 1,
+        maxOutputTokens: 4096,
+      }
+    });
 
     // Call Gemini API
     const result = await model.generateContent([
@@ -99,10 +110,25 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error generating image:', error);
+    console.error('Error details:', error.message);
+    console.error('Error status:', error.status);
     
-    // Don't expose internal errors to client
+    // Provide more helpful error messages
+    let errorMessage = 'Failed to generate image. Please try again.';
+    
+    if (error.message?.includes('API_KEY_INVALID')) {
+      errorMessage = 'API key is invalid. Please check your configuration.';
+    } else if (error.message?.includes('PERMISSION_DENIED')) {
+      errorMessage = 'API permission denied. Please enable the Gemini API in Google Cloud Console.';
+    } else if (error.message?.includes('QUOTA_EXCEEDED')) {
+      errorMessage = 'API quota exceeded. Please check your Google Cloud Console.';
+    } else if (error.status === 404) {
+      errorMessage = 'AI model not available. Please contact support.';
+    }
+    
     return res.status(500).json({ 
-      error: 'Failed to generate image. Please try again.' 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 }
