@@ -60,15 +60,16 @@ export default async function handler(req, res) {
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Try multiple models in case one isn't available
-    // gemini-1.5-flash is more stable and widely available
+    // Use Gemini 1.5 Pro which has better multimodal capabilities
+    // Note: Gemini models generate text descriptions, not actual images
+    // For true image generation, you'd need Imagen API
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-pro",
       generationConfig: {
-        temperature: 0.9,
-        topK: 32,
-        topP: 1,
-        maxOutputTokens: 4096,
+        temperature: 1,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 8192,
       }
     });
 
@@ -109,26 +110,32 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Error generating image:', error);
-    console.error('Error details:', error.message);
+    console.error('=== ERROR DETAILS ===');
+    console.error('Error message:', error.message);
     console.error('Error status:', error.status);
+    console.error('Error code:', error.code);
+    console.error('Full error:', JSON.stringify(error, null, 2));
+    console.error('===================');
     
     // Provide more helpful error messages
     let errorMessage = 'Failed to generate image. Please try again.';
     
-    if (error.message?.includes('API_KEY_INVALID')) {
+    if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('invalid')) {
       errorMessage = 'API key is invalid. Please check your configuration.';
-    } else if (error.message?.includes('PERMISSION_DENIED')) {
+    } else if (error.message?.includes('PERMISSION_DENIED') || error.message?.includes('permission')) {
       errorMessage = 'API permission denied. Please enable the Gemini API in Google Cloud Console.';
-    } else if (error.message?.includes('QUOTA_EXCEEDED')) {
+    } else if (error.message?.includes('QUOTA_EXCEEDED') || error.message?.includes('quota')) {
       errorMessage = 'API quota exceeded. Please check your Google Cloud Console.';
+    } else if (error.message?.includes('models/') || error.message?.includes('not found')) {
+      errorMessage = `Model not available: ${error.message}. The model might not exist or you may need to enable it.`;
     } else if (error.status === 404) {
       errorMessage = 'AI model not available. Please contact support.';
     }
     
     return res.status(500).json({ 
       error: errorMessage,
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: error.message,
+      errorCode: error.code || error.status
     });
   }
 }
