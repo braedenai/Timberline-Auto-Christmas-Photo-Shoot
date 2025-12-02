@@ -60,22 +60,12 @@ export default async function handler(req, res) {
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Try the most common available model names in order
-    // gemini-pro is the most widely available model
-    let modelName = "gemini-pro";
-    
-    // Try these models in order of likelihood:
-    const modelsToTry = [
-      "gemini-pro",
-      "gemini-1.5-flash", 
-      "gemini-1.0-pro",
-      "models/gemini-pro"
-    ];
-    
+    // Use Gemini 2.5 Flash which supports image generation!
+    // This model can actually edit/generate images (not just text)
     const model = genAI.getGenerativeModel({ 
-      model: modelName,
+      model: "gemini-2.5-flash",
       generationConfig: {
-        temperature: 1,
+        temperature: 0.9,
         topK: 40,
         topP: 0.95,
         maxOutputTokens: 8192,
