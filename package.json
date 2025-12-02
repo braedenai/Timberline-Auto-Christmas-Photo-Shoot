@@ -1,6 +1,7 @@
 {
   "name": "timberline-christmas-card",
   "version": "1.0.0",
+  "type": "module",
   "description": "Christmas Card Creator with Google Gemini AI",
   "scripts": {
     "dev": "vercel dev"
