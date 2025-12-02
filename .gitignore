@@ -1,5 +1,7 @@
 # Secrets and API Keys
 secrets/
+.env
+.env.local
 
 # OS Files
 .DS_Store
@@ -11,5 +13,9 @@ Thumbs.db
 *.swp
 *.swo
 
-# Node modules (if added later)
+# Dependencies
 node_modules/
+package-lock.json
+
+# Build files
+.vercel/

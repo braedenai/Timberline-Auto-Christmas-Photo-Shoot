@@ -2,6 +2,8 @@
 
 A festive web app that uses Google's Gemini AI to transform customer photos into Christmas cards with magical backgrounds!
 
+Perfect for car dealerships - customers scan a QR code, upload their photo, and get an AI-generated Christmas card instantly!
+
 ## ✨ Features
 
 - 📸 Easy photo upload
@@ -13,17 +15,19 @@ A festive web app that uses Google's Gemini AI to transform customer photos into
 - 📥 Download generated Christmas cards
 - 📱 Mobile-friendly design
 - 🎁 Generation limit to control API costs
+- 🔒 **Secure** - API key never exposed to clients
 
 ## 🚀 Quick Start
 
-### For Development
-
-1. Add your Google API key to `secrets/config.js`
-2. Open `index.html` in a web browser
+**New to this project?** Start here: [QUICK_START.md](QUICK_START.md) - Deploy in 5 minutes!
 
 ### For Production Deployment
 
-See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for complete instructions on deploying to Vercel.
+See [SECURE_DEPLOYMENT_GUIDE.md](SECURE_DEPLOYMENT_GUIDE.md) for detailed secure deployment instructions.
+
+### For Local Development
+
+See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) for testing locally.
 
 ## 📁 Project Structure
 
@@ -40,12 +44,16 @@ See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for complete instructions on depl
 └── README.md              # This file
 ```
 
-## 🔑 Getting Your API Key
+## 🔒 Security Features
 
-1. Go to https://aistudio.google.com/app/apikey
-2. Sign in with your Google account
-3. Create a new API key
-4. Add it to your configuration
+This project implements **best practices** for API key security:
+
+- ✅ **Serverless Function Proxy** - API calls go through your backend
+- ✅ **Environment Variables** - API key stored securely in Vercel
+- ✅ **Never Exposed** - Key never sent to browser or visible in source code
+- ✅ **Domain Restriction** - Optional: Restrict API key to your domain only
+
+**Unlike many tutorials**, this project does NOT hardcode API keys in HTML!
 
 ## 🎯 Use Case
 
