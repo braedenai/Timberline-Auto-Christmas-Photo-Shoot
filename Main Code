@@ -14,6 +14,9 @@
         }
       }
     </script>
+    
+    <!-- Load API Configuration -->
+    <script src="secrets/config.js"></script>
 
     <style>
         body {
@@ -123,8 +126,8 @@
         import { GoogleGenAI } from "@google/genai";
 
         // --- CONFIGURATION ---
-        // ⚠️ REPLACE THIS WITH YOUR GOOGLE API KEY ⚠️
-        const API_KEY = "YOUR_GOOGLE_API_KEY_HERE"; 
+        // API key is loaded from secrets/config.js
+        const API_KEY = window.CONFIG?.GOOGLE_API_KEY || ""; 
         
         // Background Prompts
         const BACKGROUNDS = {
@@ -187,8 +190,13 @@
 
         // Main Magic Function
         generateBtn.addEventListener('click', async () => {
-            if (generationsLeft <= 0 || !API_KEY.startsWith("AI")) {
-                showError("Please check your API key or Generation Limit.");
+            if (generationsLeft <= 0) {
+                showError("You've used all your generations! Come back next time.");
+                return;
+            }
+            
+            if (!API_KEY || API_KEY === "YOUR_GOOGLE_API_KEY_HERE" || !API_KEY.startsWith("AIza")) {
+                showError("Please add your Google API key to secrets/config.js first!");
                 return;
             }
 
@@ -199,39 +207,38 @@
             resultsArea.classList.add('hidden');
 
             try {
-                const client = new GoogleGenAI({ apiKey: API_KEY });
+                const genAI = new GoogleGenAI({ apiKey: API_KEY });
                 
-                // Call Google Gemini API
-                // 'gemini-2.5-flash-image' is the model optimized for image editing/generation
-                const response = await client.models.generateContent({
-                    model: 'gemini-2.5-flash', 
-                    contents: [
-                        {
-                            role: 'user',
-                            parts: [
-                                { text: BACKGROUNDS[selectedBackgroundKey] },
-                                { 
-                                    inlineData: { 
-                                        mimeType: 'image/jpeg', 
-                                        data: selectedFileBase64 
-                                    } 
-                                }
-                            ]
+                // Get the model - using gemini-2.0-flash-exp which supports image generation
+                const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+                
+                // Call Google Gemini API with image and prompt
+                const result = await model.generateContent([
+                    BACKGROUNDS[selectedBackgroundKey],
+                    {
+                        inlineData: {
+                            mimeType: "image/jpeg",
+                            data: selectedFileBase64
                         }
-                    ]
-                });
+                    }
+                ]);
 
+                const response = await result.response;
+                
                 // Extract Image from Response
-                // Google returns the image as inline Base64 data within the response parts
-                const parts = response.candidates[0].content.parts;
-                const imagePart = parts.find(part => part.inlineData);
+                // For image generation, check if response has image data
+                const parts = response.candidates?.[0]?.content?.parts;
+                const imagePart = parts?.find(part => part.inlineData);
 
                 if (!imagePart) {
-                    throw new Error("The elves got confused (No image returned). Try a different photo.");
+                    // If no image returned, show the text response as error
+                    const textPart = parts?.find(part => part.text);
+                    const errorText = textPart?.text || "No image returned";
+                    throw new Error(`The elves got confused: ${errorText}`);
                 }
 
                 // Display Result
-                const finalImageUrl = `data:image/jpeg;base64,${imagePart.inlineData.data}`;
+                const finalImageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
                 resultImageTag.src = finalImageUrl;
                 downloadLink.href = finalImageUrl;
                 
