@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timberline Auto Christmas Photo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://esm.run/@google/genai"
+        }
+      }
+    </script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at top, #f3f4f6, #e5e7eb);
+        }
+        .festive-gradient {
+            background: linear-gradient(135deg, #d63333 0%, #b31212 100%);
+        }
+        .festive-text {
+            background: linear-gradient(135deg, #d63333 0%, #065f46 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .apple-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between py-8 px-4">
+
+    <header class="w-full max-w-2xl flex flex-col items-center mb-4">
+        <img src="timberline-logo.png" alt="Timberline Auto Logo" class="h-20 md:h-24 mb-6 drop-shadow-sm">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 text-center">
+            Christmas Card Creator
+        </h1>
+        <p class="text-gray-600 mt-2 text-center max-w-md">
+            Upload your photo, pick a festive scene, and let us create magic.
+        </p>
+    </header>
+
+    <main class="w-full max-w-2xl apple-card rounded-3xl p-6 md:p-10 border border-white/50 relative overflow-hidden">
+        
+        <div class="absolute top-4 right-4 bg-green-50 text-green-700 text-sm font-medium px-3 py-1 rounded-full border border-green-200">
+            <i class="fa-solid fa-gift mr-1"></i>
+            <span id="remaining-gens">3</span> left
+        </div>
+
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">1. Upload Your Picture</h2>
+            <label for="photo-upload" id="upload-container" class="group relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-red-400 transition-all overflow-hidden">
+                <div id="upload-prompt" class="flex flex-col items-center justify-center pt-5 pb-6 text-gray-500 group-hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-camera text-4xl mb-3"></i>
+                    <p class="mb-1 text-sm font-medium">Tap to upload photo</p>
+                    <p class="text-xs">JPG or PNG optimized for mobile</p>
+                </div>
+                <img id="image-preview" class="hidden absolute inset-0 w-full h-full object-cover" />
+                <input id="photo-upload" type="file" class="hidden" accept="image/jpeg, image/png" />
+            </label>
+        </div>
+
+        <div class="mb-10">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">2. Choose a Scene</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="selectBackground('alpine')" id="bg-alpine" class="bg-option ring-2 ring-transparent hover:ring-red-300 rounded-xl p-4 text-left bg-white border transition-all relative overflow-hidden group">
+                    <i class="fa-solid fa-mountain text-blue-600 mb-2 text-xl relative z-10"></i>
+                    <h3 class="font-medium text-gray-800 relative z-10">Alpine Winter</h3>
+                    <p class="text-xs text-gray-500 relative z-10">Snowy pines & lights</p>
+                </button>
+                <button onclick="selectBackground('workshop')" id="bg-workshop" class="bg-option ring-2 ring-transparent hover:ring-red-300 rounded-xl p-4 text-left bg-white border transition-all relative overflow-hidden group">
+                    <i class="fa-solid fa-sleigh text-red-600 mb-2 text-xl relative z-10"></i>
+                    <h3 class="font-medium text-gray-800 relative z-10">Santa's Workshop</h3>
+                    <p class="text-xs text-gray-500 relative z-10">Elves & reindeer</p>
+                </button>
+                <button onclick="selectBackground('village')" id="bg-village" class="bg-option ring-2 ring-transparent hover:ring-red-300 rounded-xl p-4 text-left bg-white border transition-all relative overflow-hidden group">
+                    <i class="fa-solid fa-cookie-bite text-amber-600 mb-2 text-xl relative z-10"></i>
+                    <h3 class="font-medium text-gray-800 relative z-10">Gingerbread Village</h3>
+                    <p class="text-xs text-gray-500 relative z-10">Candy storefronts</p>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center">
+            <button id="generate-btn" disabled class="festive-gradient text-white text-lg font-semibold py-4 px-12 rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center">
+                <span>Create Magic</span>
+                <i class="fa-solid fa-wand-magic-sparkles ml-2"></i>
+            </button>
+
+            <div id="loading-state" class="hidden flex flex-col items-center py-4">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600 mb-3"></div>
+                <p class="text-gray-600 font-medium animate-pulse">Consulting the elves...</p>
+            </div>
+
+            <p id="error-message" class="hidden text-red-600 mt-4 text-center text-sm"></p>
+        </div>
+
+        <div id="results-area" class="hidden mt-10 border-t pt-8">
+             <h2 class="text-lg font-semibold text-center festive-text mb-6">Your Christmas Magic!</h2>
+             <div class="rounded-2xl overflow-hidden shadow-xl border-4 border-white mb-6">
+                <img id="result-image" src="" alt="Generated Christmas Photo" class="w-full h-auto relative z-10">
+             </div>
+             <a id="download-link" href="#" download="timberline-christmas.png" class="flex w-full justify-center items-center bg-gray-800 text-white font-medium py-3 px-6 rounded-xl hover:bg-gray-900 transition-all">
+                <i class="fa-solid fa-download mr-2"></i> Download Photo
+             </a>
+        </div>
+       
+    </main>
+
+    <footer class="mt-12 text-center pb-8">
+        <p class="festive-text text-2xl font-bold mb-2">Merry Christmas!</p>
+        <p class="text-gray-500 text-sm">from Timberline Auto</p>
+    </footer>
+
+    <script type="module">
+        import { GoogleGenAI } from "@google/genai";
+
+        // --- CONFIGURATION ---
+        // ⚠️ REPLACE THIS WITH YOUR GOOGLE API KEY ⚠️
+        const API_KEY = "YOUR_GOOGLE_API_KEY_HERE"; 
+        
+        // Background Prompts
+        const BACKGROUNDS = {
+            'alpine': "Transform this into a festive photo in an Alpine winter wonderland. Keep the people exactly as they are but place them in front of snow-covered pine trees, glowing warm string lights, and mountains. The lighting should be soft and magical.",
+            'workshop': "Transform this into a festive photo outside Santa's workshop. Keep the people exactly as they are but place them in a rustic wooden setting with snow on the roof, colorful lights, and blurred elves in the background.",
+            'village': "Transform this into a festive photo in a Gingerbread Christmas Village. Keep the people exactly as they are but place them on a street with gingerbread storefronts, candy canes, and gentle falling snow."
+        };
+
+        // State
+        let selectedFileBase64 = null;
+        let selectedBackgroundKey = null;
+        let generationsLeft = parseInt(localStorage.getItem('timberlineGenerations')) || 3;
+
+        // Elements
+        const generateBtn = document.getElementById('generate-btn');
+        const loadingState = document.getElementById('loading-state');
+        const resultsArea = document.getElementById('results-area');
+        const resultImageTag = document.getElementById('result-image');
+        const downloadLink = document.getElementById('download-link');
+        const errorMessage = document.getElementById('error-message');
+        const remainingGensLabel = document.getElementById('remaining-gens');
+
+        // Init
+        remainingGensLabel.textContent = generationsLeft;
+        
+        // File Upload Handler
+        document.getElementById('photo-upload').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('image-preview').src = e.target.result;
+                    document.getElementById('image-preview').classList.remove('hidden');
+                    document.getElementById('upload-prompt').classList.add('opacity-0');
+                    // Store the base64 string without the prefix (data:image/jpeg;base64,) for the API
+                    selectedFileBase64 = e.target.result.split(',')[1];
+                    checkButtonState();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Background Selection Handler
+        window.selectBackground = function(key) {
+            selectedBackgroundKey = key;
+            document.querySelectorAll('.bg-option').forEach(el => {
+               el.classList.remove('ring-red-500', 'bg-red-50');
+               el.classList.add('ring-transparent');
+            });
+            document.getElementById('bg-' + key).classList.add('ring-red-500', 'bg-red-50');
+            document.getElementById('bg-' + key).classList.remove('ring-transparent');
+            checkButtonState();
+        }
+
+        function checkButtonState() {
+            if (selectedFileBase64 && selectedBackgroundKey && generationsLeft > 0) {
+                generateBtn.disabled = false;
+            }
+        }
+
+        // Main Magic Function
+        generateBtn.addEventListener('click', async () => {
+            if (generationsLeft <= 0 || !API_KEY.startsWith("AI")) {
+                showError("Please check your API key or Generation Limit.");
+                return;
+            }
+
+            // UI Updates
+            generateBtn.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+            resultsArea.classList.add('hidden');
+
+            try {
+                const client = new GoogleGenAI({ apiKey: API_KEY });
+                
+                // Call Google Gemini API
+                // 'gemini-2.5-flash-image' is the model optimized for image editing/generation
+                const response = await client.models.generateContent({
+                    model: 'gemini-2.5-flash', 
+                    contents: [
+                        {
+                            role: 'user',
+                            parts: [
+                                { text: BACKGROUNDS[selectedBackgroundKey] },
+                                { 
+                                    inlineData: { 
+                                        mimeType: 'image/jpeg', 
+                                        data: selectedFileBase64 
+                                    } 
+                                }
+                            ]
+                        }
+                    ]
+                });
+
+                // Extract Image from Response
+                // Google returns the image as inline Base64 data within the response parts
+                const parts = response.candidates[0].content.parts;
+                const imagePart = parts.find(part => part.inlineData);
+
+                if (!imagePart) {
+                    throw new Error("The elves got confused (No image returned). Try a different photo.");
+                }
+
+                // Display Result
+                const finalImageUrl = `data:image/jpeg;base64,${imagePart.inlineData.data}`;
+                resultImageTag.src = finalImageUrl;
+                downloadLink.href = finalImageUrl;
+                
+                resultsArea.classList.remove('hidden');
+                
+                // Decrement Counter
+                generationsLeft--;
+                remainingGensLabel.textContent = generationsLeft;
+                localStorage.setItem('timberlineGenerations', generationsLeft);
+
+            } catch (error) {
+                console.error(error);
+                showError("Oops! The elves dropped the snowball. " + (error.message || "Try again."));
+                generateBtn.classList.remove('hidden');
+            } finally {
+                loadingState.classList.add('hidden');
+            }
+        });
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorMessage.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
